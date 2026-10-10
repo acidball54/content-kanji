@@ -9,9 +9,8 @@ const templates = {
   ],
   kanji: [
     { key: 'kanji', label: 'Kanji', placeholder: '学', font: 'jp' },
-    { key: 'meaning', label: 'English meaning', placeholder: 'study; learning', font: 'en' },
-    { key: 'on', label: 'On-reading', placeholder: 'ガク', font: 'jp' },
-    { key: 'kun', label: 'Kun-reading', placeholder: 'まな.ぶ', font: 'jp' }
+    { key: 'furigana', label: 'Furigana', placeholder: 'まなぶ', font: 'jp' },
+    { key: 'meaning', label: 'English meaning', placeholder: 'study; learning', font: 'en' }
   ],
   compound: [
     { key: 'word', label: 'Compound word', placeholder: '学生', font: 'jp', full: true },
@@ -276,7 +275,7 @@ function buildBlocks(settings) {
   const v = settings.values;
   const blocks = [];
   const add = (text, role, font, key) => { if (text?.trim()) blocks.push({ text: text.trim(), role, font, style: settings.richStyles?.[key] || {} }); };
-  const reading = settings.template === 'kanji' ? [v.on && `音 ${v.on}`, v.kun && `訓 ${v.kun}`].filter(Boolean).join('　') : v.reading;
+  const reading = settings.template === 'kanji' ? v.furigana : v.reading;
   if (settings.template === 'vocabulary' || settings.template === 'compound' || settings.template === 'reading') {
     add(v.word || v.kanji, 'hero', 'jp');
     if (settings.showReading) add(reading, 'reading', 'jp');
@@ -595,6 +594,96 @@ function renderQueue() {
   });
 }
 
+function normalizeCsvHeader(header) {
+  return header.replace(/^\uFEFF/, '').trim().toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  const source = text.replace(/^\uFEFF/, '');
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index];
+    if (quoted) {
+      if (character === '"' && source[index + 1] === '"') {
+        cell += '"';
+        index++;
+      } else if (character === '"') quoted = false;
+      else cell += character;
+    } else if (character === '"' && cell.length === 0) quoted = true;
+    else if (character === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (character === '\n' || character === '\r') {
+      if (character === '\r' && source[index + 1] === '\n') index++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+    } else cell += character;
+  }
+  if (quoted) throw new Error('This CSV has an unclosed quoted field.');
+  if (cell.length || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function updateCsvGuidance() {
+  const template = $('#template-kind').value;
+  const definitions = [...templates[template], ...optionalFields[template]];
+  const columns = [...new Set(definitions.filter(field => field.type !== 'checkbox').map(field => field.key))];
+  $('#csv-guidance').textContent = `First row must contain headers. CSV columns for ${$('#template-kind').selectedOptions[0].textContent}: ${columns.join(', ')}. Field labels shown in the editor are also accepted.`;
+}
+
+function importCsvText(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) throw new Error('Add a header row and at least one data row to the CSV.');
+  const template = $('#template-kind').value;
+  const definitions = [...templates[template], ...optionalFields[template]];
+  const available = new Map();
+  for (const field of definitions) {
+    available.set(normalizeCsvHeader(field.key), field.key);
+    available.set(normalizeCsvHeader(field.label), field.key);
+  }
+  const aliases = {
+    japanese: 'word', japaneseword: 'word', compoundword: 'word', kanjiorcompound: 'word',
+    hiraganareading: 'reading', reading: 'reading', englishmeaning: 'meaning', meaning: 'meaning',
+    examplesentence: 'example', exampletranslation: 'translation',
+    examplewords: 'words', correctanswer: 'correct', underlinecorrectoption: 'underlineCorrect',
+    showansweroncard: 'revealAnswer', answerrevealnote: 'reveal'
+  };
+  for (const [alias, key] of Object.entries(aliases)) {
+    if (definitions.some(field => field.key === key)) available.set(alias, key);
+  }
+  const mappings = rows[0].map(header => available.get(normalizeCsvHeader(header)) || null);
+  if (!mappings.some(Boolean)) throw new Error(`No recognized columns for the selected ${$('#template-kind').selectedOptions[0].textContent} template.`);
+  const base = selectedSettings();
+  const templateName = $('#template-kind').selectedOptions[0].textContent;
+  const imports = [];
+  for (const row of rows.slice(1)) {
+    if (row.every(value => !value.trim())) continue;
+    const values = {};
+    mappings.forEach((key, index) => {
+      if (!key) return;
+      const definition = definitions.find(field => field.key === key);
+      const value = row[index] ?? '';
+      values[key] = definition?.type === 'checkbox' ? /^(1|true|yes|y)$/i.test(value.trim()) : value.trim();
+    });
+    if (!Object.values(values).some(value => typeof value === 'boolean' ? value : value.trim())) continue;
+    const settings = { ...base, template, values };
+    const title = values.word || values.kanji || values.meaning || `${templateName} ${imports.length + 1}`;
+    imports.push({ settings, title, templateName });
+  }
+  if (!imports.length) throw new Error('No non-empty content rows were found in the CSV.');
+  state.queued.push(...imports);
+  renderQueue();
+  $('#preview-status').textContent = `Imported ${imports.length} ${imports.length === 1 ? 'card' : 'cards'} from CSV.`;
+}
+
 function crc32(bytes) {
   let crc = -1;
   for (const byte of bytes) {
@@ -672,7 +761,7 @@ function loadSample() {
   const template = $('#template-kind').value;
   const examples = {
     vocabulary: { word: '木漏れ日', reading: 'こもれび', meaning: 'sunlight filtering through trees', example: '木漏れ日がきれいです。', translation: 'The sunlight through the trees is beautiful.' },
-    kanji: { kanji: '森', on: 'シン', kun: 'もり', meaning: 'forest', words: '森林、森の中' },
+    kanji: { kanji: '森', furigana: 'もり', meaning: 'forest', words: '森林、森の中' },
     compound: { word: '図書館', reading: 'としょかん', meaning: 'library', example: '図書館で本を読みます。' },
     'vocab-quiz': { word: '水 means…?', option1: 'water', option2: 'fire', option3: 'mountain', option4: 'tree', correct: '1', reveal: '水（みず）means water.' },
     'kanji-quiz': { kanji: '川', option1: 'うみ', option2: 'ひと', option3: 'かわ', option4: 'そら', correct: '3' },
@@ -723,7 +812,7 @@ function bindEvents() {
   $$('.format-choice').forEach(button => button.addEventListener('click', () => setSize(button.dataset.size)));
   $('#custom-size-enabled').addEventListener('change', event => setSize(event.target.checked ? 'custom' : 'reel'));
   ['custom-width', 'custom-height'].forEach(id => $(`#${id}`).addEventListener('input', updateDimensions));
-  $('#template-kind').addEventListener('change', () => { state.optional.clear(); renderFields($('#template-kind').value); scheduleRender(); });
+  $('#template-kind').addEventListener('change', () => { state.optional.clear(); renderFields($('#template-kind').value); updateCsvGuidance(); scheduleRender(); });
   $('#content-fields').addEventListener('input', scheduleRender);
   $('#content-fields').addEventListener('change', scheduleRender);
   $('#content-fields').addEventListener('focusin', event => {
@@ -802,10 +891,23 @@ function bindEvents() {
     renderQueue();
     $('#preview-status').textContent = 'Card added to the batch queue.';
   });
+  $('#import-csv-button').addEventListener('click', () => $('#csv-upload').click());
+  $('#csv-upload').addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      importCsvText(await file.text());
+    } catch (error) {
+      $('#preview-status').textContent = error.message;
+    } finally {
+      event.target.value = '';
+    }
+  });
   $('#download-batch').addEventListener('click', downloadBatch);
 }
 
 renderFields($('#template-kind').value);
+updateCsvGuidance();
 restoreSettings();
 bindEvents();
 updateRangeOutputs();

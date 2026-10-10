@@ -154,8 +154,9 @@
       </div>
 
       <section class="batch-section">
-        <div class="batch-heading"><div><p class="eyebrow">MAKE A SET</p><h2>Batch queue <span id="batch-count">0</span></h2></div><button id="add-to-batch" class="button-outline" type="button">＋ Add current card</button></div>
+        <div class="batch-heading"><div><p class="eyebrow">MAKE A SET</p><h2>Batch queue <span id="batch-count">0</span></h2></div><div class="batch-heading-actions"><button id="import-csv-button" class="button-outline" type="button">↑ Import CSV</button><input id="csv-upload" type="file" accept=".csv,text/csv" hidden><button id="add-to-batch" class="button-outline" type="button">＋ Add current card</button></div></div>
         <p class="batch-hint">Each queued card keeps its own format and design. Download the set as one ZIP.</p>
+        <p id="csv-guidance" class="csv-guidance">Choose a template first. CSV headers should match its field names, such as <code>kanji,furigana,meaning</code> or <code>word,reading,meaning</code>.</p>
         <div id="batch-list" class="batch-list"><p class="empty-queue">Your queued cards will appear here.</p></div>
         <div class="batch-actions">
           <label class="format-select-label" for="batch-format">Export as</label>
