@@ -24,6 +24,8 @@ Use **Save settings** to store design preferences and the current card fields in
 
 Choose a card template, then select **Import CSV** in the Batch queue. The first row is a header row; remaining non-empty rows become separate queued cards and inherit the current canvas and design settings. Header names can use field keys or labels shown in the editor.
 
+Download [sample-kanji.csv](sample-kanji.csv) or [sample-vocabulary.csv](sample-vocabulary.csv) from the project, then import the matching file in the editor.
+
 Kanji card example:
 
 ```csv
