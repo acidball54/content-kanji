@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f3eb">
+  <title>Nihongo Image Maker</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Nihongo Image Maker home">
+      <span class="brand-mark" aria-hidden="true">日</span>
+      <span>Nihongo <span class="brand-light">Image Maker</span></span>
+    </a>
+    <span class="local-note"><span class="status-dot"></span> Private, in-browser studio</span>
+  </header>
+
+  <main id="top" class="workspace">
+    <section class="editor" aria-label="Image editor">
+      <div class="intro">
+        <p class="eyebrow">JAPANESE STUDY, MADE SHAREABLE</p>
+        <h1>Make a card.<br><span>Keep it memorable.</span></h1>
+      </div>
+
+      <section class="control-section format-section">
+        <div class="section-heading"><span class="step">01</span><h2>Canvas</h2></div>
+        <div class="format-grid" role="group" aria-label="Image format">
+          <button class="format-choice selected" data-size="reel" type="button"><span class="format-shape reel-shape"></span><span><b>Reel / TikTok</b><small>9:16 · 1080 × 1920</small></span></button>
+          <button class="format-choice" data-size="facebook" type="button"><span class="format-shape post-shape"></span><span><b>Facebook post</b><small>4:5 · 1080 × 1350</small></span></button>
+          <button class="format-choice" data-size="portrait" type="button"><span class="format-shape portrait-shape"></span><span><b>Portrait</b><small>3:4 · 1080 × 1440</small></span></button>
+          <button class="format-choice" data-size="square" type="button"><span class="format-shape square-shape"></span><span><b>Square</b><small>1:1 · 1080 × 1080</small></span></button>
+        </div>
+        <div class="custom-size-row">
+          <label class="check-label"><input id="custom-size-enabled" type="checkbox"> Custom size</label>
+          <div class="dimension-inputs">
+            <label>W <input id="custom-width" type="number" min="200" max="4000" value="1080" disabled></label>
+            <span aria-hidden="true">×</span>
+            <label>H <input id="custom-height" type="number" min="200" max="4000" value="1920" disabled></label>
+          </div>
+        </div>
+        <p id="dimension-readout" class="dimension-readout">1080 × 1920 px <span>·</span> 9:16</p>
+      </section>
+
+      <section class="control-section">
+        <div class="section-heading"><span class="step">02</span><h2>Learning card</h2></div>
+        <label class="field-label" for="template-kind">Template type</label>
+        <select id="template-kind" class="select-control">
+          <option value="vocabulary">Vocabulary card</option>
+          <option value="kanji">Kanji card</option>
+          <option value="compound">Kanji compound card</option>
+          <option value="vocab-quiz">Vocabulary quiz</option>
+          <option value="kanji-quiz">Kanji quiz</option>
+          <option value="reading">Reading and meaning</option>
+        </select>
+        <div class="rich-toolbar" role="toolbar" aria-label="Text formatting">
+          <span id="format-target" class="format-target">Focus a text field to format</span>
+          <div class="rich-buttons">
+            <button type="button" data-rich-style="bold" aria-label="Toggle bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-rich-style="italic" aria-label="Toggle italic" title="Italic"><em>I</em></button>
+            <button type="button" data-rich-style="underline" aria-label="Toggle underline" title="Underline"><u>U</u></button>
+          </div>
+        </div>
+        <div id="content-fields" class="content-fields"></div>
+        <div class="field-actions">
+          <button id="add-optional" class="text-button" type="button">＋ Add optional section</button>
+          <button id="clear-fields" class="text-button quiet" type="button">Clear fields</button>
+        </div>
+        <div class="sample-row"><button id="load-sample" class="sample-button" type="button">Load sample content</button><span>Replace it with your own words.</span></div>
+      </section>
+
+      <details class="control-section design-section" open>
+        <summary class="section-heading"><span class="step">03</span><h2>Design</h2><span class="summary-caret">⌄</span></summary>
+        <div class="design-controls">
+          <label class="field-label" for="background-style">Background</label>
+          <select id="background-style" class="select-control">
+            <option value="template">My Japanese templates</option>
+            <option value="plain">Plain</option>
+            <option value="landscape">Japanese landscape</option>
+            <option value="pastel">Soft pastel</option>
+            <option value="upload">Uploaded image</option>
+          </select>
+          <div id="upload-row" class="upload-row" hidden>
+            <label class="upload-button" for="background-upload">↑ Choose background image</label>
+            <input id="background-upload" type="file" accept="image/*" hidden>
+            <span id="upload-name" class="upload-name">No image selected</span>
+          </div>
+          <div class="design-grid">
+            <label class="field-label" for="jp-font">Japanese font</label>
+            <select id="jp-font" class="select-control">
+              <option value="Noto Sans JP, sans-serif">Noto Sans JP</option>
+              <option value="Yu Gothic, Hiragino Kaku Gothic ProN, sans-serif">Yu Gothic</option>
+              <option value="Meiryo, sans-serif">Meiryo</option>
+              <option value="serif">Japanese serif</option>
+            </select>
+            <label class="field-label" for="en-font">English font</label>
+            <select id="en-font" class="select-control">
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Trebuchet MS, sans-serif">Trebuchet</option>
+              <option value="serif">Serif</option>
+            </select>
+            <label class="field-label" for="text-color">Text color</label>
+            <div class="color-control"><input id="text-color" type="color" value="#243c44"><span id="text-color-value">#243C44</span></div>
+            <label class="field-label" for="background-color">Background color</label>
+            <div class="color-control"><input id="background-color" type="color" value="#f8f5ec"><span id="background-color-value">#F8F5EC</span></div>
+          </div>
+          <label class="range-label" for="text-size"><span>Text size</span><output id="text-size-value">64</output></label>
+          <input id="text-size" class="range-control" type="range" min="40" max="100" value="64">
+          <label class="range-label" for="line-spacing"><span>Line spacing</span><output id="line-spacing-value">1.35</output></label>
+          <input id="line-spacing" class="range-control" type="range" min="110" max="180" value="135">
+          <label class="range-label" for="content-x"><span>Horizontal position</span><output id="content-x-value">50%</output></label>
+          <input id="content-x" class="range-control" type="range" min="30" max="70" value="50">
+          <label class="range-label" for="content-y"><span>Vertical position</span><output id="content-y-value">54%</output></label>
+          <input id="content-y" class="range-control" type="range" min="30" max="72" value="54">
+          <div class="align-row" role="group" aria-label="Text alignment">
+            <span>Alignment</span>
+            <div class="segmented">
+              <button type="button" data-align="left" aria-label="Align left">≡</button>
+              <button type="button" data-align="center" class="selected" aria-label="Align center">☰</button>
+              <button type="button" data-align="right" aria-label="Align right">≡</button>
+            </div>
+          </div>
+          <div class="toggle-grid">
+            <label class="check-label"><input id="show-reading" type="checkbox" checked> Reading</label>
+            <label class="check-label"><input id="show-meaning" type="checkbox" checked> Meaning</label>
+            <label class="check-label"><input id="show-example" type="checkbox" checked> Example</label>
+            <label class="check-label"><input id="show-border" type="checkbox"> Fine border</label>
+            <label class="check-label"><input id="transparent-bg" type="checkbox"> Transparent PNG</label>
+          </div>
+        </div>
+      </details>
+
+      <div class="primary-actions">
+        <button id="generate-preview" class="button-primary" type="button"><span aria-hidden="true">✳</span> Generate preview</button>
+        <button id="save-settings" class="button-save" type="button">Save settings</button>
+        <button id="reset-editor" class="button-save button-reset" type="button">Reset</button>
+      </div>
+    </section>
+
+    <section class="preview-column" aria-label="Preview and export">
+      <div class="preview-heading">
+        <div><p class="eyebrow">YOUR CANVAS</p><h2>Live preview</h2></div>
+        <span id="preview-dimensions" class="preview-dimensions">1080 × 1920</span>
+      </div>
+      <div class="preview-stage">
+        <div class="canvas-wrap"><canvas id="preview-canvas" width="1080" height="1920" aria-label="Generated image preview"></canvas></div>
+      </div>
+      <p id="preview-status" class="preview-status" aria-live="polite">Preview updates as you edit.</p>
+      <div class="export-actions">
+        <button id="download-png" class="button-primary download-button" type="button"><span aria-hidden="true">↓</span> Download PNG</button>
+        <button id="download-jpg" class="button-secondary download-button" type="button"><span aria-hidden="true">↓</span> Download JPG</button>
+      </div>
+
+      <section class="batch-section">
+        <div class="batch-heading"><div><p class="eyebrow">MAKE A SET</p><h2>Batch queue <span id="batch-count">0</span></h2></div><button id="add-to-batch" class="button-outline" type="button">＋ Add current card</button></div>
+        <p class="batch-hint">Each queued card keeps its own format and design. Download the set as one ZIP.</p>
+        <div id="batch-list" class="batch-list"><p class="empty-queue">Your queued cards will appear here.</p></div>
+        <div class="batch-actions">
+          <label class="format-select-label" for="batch-format">Export as</label>
+          <select id="batch-format" class="batch-format"><option value="png">PNG</option><option value="jpeg">JPG</option></select>
+          <button id="download-batch" class="button-secondary batch-download" type="button" disabled>↓ Download ZIP</button>
+        </div>
+      </section>
+      <p class="privacy-note"><span aria-hidden="true">◈</span> Images are rendered on this device. Nothing is uploaded.</p>
+    </section>
+  </main>
+</body>
+</html>
