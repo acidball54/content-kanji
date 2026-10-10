@@ -288,8 +288,8 @@ function buildBlocks(settings) {
     if (settings.template === 'compound' && settings.showExample) add(v.example, 'example', 'jp');
   } else if (settings.template === 'kanji') {
     add(v.kanji, 'hero-kanji', 'jp');
-    if (settings.showMeaning) add(v.meaning, 'meaning', 'en');
     if (settings.showReading) add(reading, 'reading', 'jp');
+    if (settings.showMeaning) add(v.meaning, 'meaning', 'en');
     if (settings.showExample) add(v.words, 'example', 'jp');
   } else {
     if (settings.template === 'kanji-quiz') {
